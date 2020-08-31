@@ -141,13 +141,14 @@ class QuizSerializer(serializers.ModelSerializer):
                         if quiz.id not in exist_id:
                             quiz.delete()
             else:
-                question_quiz = QuestionQuiz.objects.create(question_type=quiz_question['question_type'],
-                                                            description=quiz_question['description'],
-                                                            explain=quiz_question['explain'],
-                                                            image=quiz_question['image'],
-                                                            choice=quiz_question['choice'],
-                                                            correct_choice=quiz_question['correct_choice'],
-                                                            quiz=instance)
+                # question_quiz = QuestionQuiz.objects.create(question_type=quiz_question['question_type'],
+                #                                             description=quiz_question['description'],
+                #                                             explain=quiz_question['explain'],
+                #                                             image=quiz_question['image'],
+                #                                             choice=quiz_question['choice'],
+                #                                             correct_choice=quiz_question['correct_choice'],
+                #                                             quiz=instance)
+                question_quiz = QuestionQuiz.objects.create(quiz=instance, **quiz_question)
                 json_return.append(question_quiz)
         return json_return
 
