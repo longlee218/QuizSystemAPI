@@ -160,7 +160,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'longlehoang2013@gmail.com'
-EMAIL_HOST_PASSWORD = 'vanmieuNTT218'
+EMAIL_HOST_PASSWORD = '*********'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(seconds=3600),
