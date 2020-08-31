@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% csrf_token %}
+{% block content %}
+    <div class="container">
+    <hr>
+    <div class="row justify-content-center pt-5">
+        <div class="col-md-4">
+            <div class="card">
+                    <header class="card-header">
+                        <h3 class="card-title mb-4 mt-1">Đăng nhập</h3>
+                    </header>
+                    <article class="card-body">
+                        <form method="post" id="login_form">
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input id="username" class="form-control" placeholder="Enter username" type="text">
+                                <div id="messages_email"></div>
+                            </div> <!-- form-group// -->
+                            <div class="form-group">
+                                <a class="float-right" href="ForgotPassword/defaultFunction">Quên mật khẩu?</a>
+                                <label>Mật khẩu</label>
+                                <input id="password" class="form-control" placeholder="******" type="password">
+                                <div id="messages_password"></div>
+                                <div id="messages"></div>
+                            </div> <!-- form-group// -->
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <a class="float-right" href="RegisterAccount">Đăng ký tài khoản?</a>
+                                    <label><input type="checkbox"> Lưu mật khẩu </label>
+                                </div> <!-- checkbox .// -->
+                            </div> <!-- form-group// -->
+                            <div class="form-group">
+                                <button type="submit" name="login_button"  class="btn btn-outline-primary btn-block"> Đăng nhập </button>
+                            </div> <!-- form-group// -->
+                        </form>
+                    </article>
+            </div> <!-- card.// -->
+
+        </div> <!-- col.// -->
+    </div> <!-- row.// -->
+    </div>
+    <script>
+     function setCookie(cname, cvalue, exdays) {
+          var d = new Date();
+          d.setTime(d.getTime() + (exdays*1000));
+          var expires = "expires="+ d.toUTCString();
+          document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+     }
+
+     var form_login = document.getElementById('login_form');
+     form_login.addEventListener('submit', function (e) {
+         e.preventDefault();
+         var data_post = JSON.stringify({
+             username: document.getElementById('username').value,
+             password: document.getElementById('password').value
+         });
+         console.log(data_post);
+         fetch("{% url 'teacher:login' %}", {
+         method: 'POST',
+         headers:{
+             'X-CSRFToken': csrftoken,
+             'Content-type': 'application/json',
+         },
+         body: data_post,
+     }).then(response => response.json())
+             .then(data => {
+             {#console.log(data);#}
+            setCookie('Authorization', data['access_token'], data['access_expire']);
+            window.location.href = '{% url "teacher:homepage" %}';
+         })
+         .catch(error =>{
+             console.log(error);
+         });
+
+     });
+
+    {#$('document').ready(function () {#}
+    {#    $('#login_btn').click(function () {#}
+    {#        var username = $("#username").val();#}
+    {#        var password = $('#password').val();#}
+    {#        console.log(username);#}
+    {#        var json_data_post = { username: username, password: password};#}
+    {#        console.log(json_data_post);#}
+    {#        console.log(csrftoken);#}
+    {#        $.ajax({#}
+    {#            type: 'POST',#}
+    {#            url: "{% url 'teacher:login' %}",#}
+    {#            data: json_data_post,#}
+    {#            header: {#}
+    {#                'X-CSRFToken': csrftoken,#}
+    {#            },#}
+    {#            success: function (data) {#}
+    {#                var date = new Date();#}
+    {#                setCookie('9-#k!w=1+8f##a@q1@w5t#8$234^^=5z(um(9-s5yg%pezm$#m', data['access_token'], data['access_expire']);#}
+    {#                window.location.href = '{% url "teacher:homepage" %}';#}
+    {##}
+    {#           },#}
+    {#           error: function (xhr, error) {#}
+    {#               console.log(xhr);#}
+    {#               console.log(error);#}
+    {#           }#}
+    {#        });#}
+    {#        return false;#}
+    {#    });#}
+    </script>
+{% endblock %}

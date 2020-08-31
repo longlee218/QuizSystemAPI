@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block navbar %}
+<style>
+    .main, navbar-expand-lg,.page-footer {
+        background-color: rgb(119, 170, 209);
+        border: none;
+    }
+    .page-footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        color: white;
+        text-align: center;
+        padding: 15px;
+    }
+    #username {
+        text-align: center;
+        font-size: x-large;
+        padding: 40px;
+    }
+    .text-size {
+        font-style: unset;
+        color: white;
+        margin-right: 30px;
+    }
+    .nav-item{
+        margin-right: 20px;
+        margin-top: 10px;
+    }
+    .link_size:focus {
+        background-color: rgb(119, 170, 209);
+    }
+</style>
+<div class="main">
+    <div>
+          <div class="text-center text-size text-uppeercase" id="username"></div>
+    </div>
+    <nav class="navbar navbar-expand-lg navbar-light ">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto col-md-6">
+                <li class="nav-item active">
+                    <a class="text-size" href="/../QuizSys/Home/InstructorHome" >Trang chủ <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item active">
+                    <a class="text-size" href="#">Bộ đề <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item active">
+                    <a class=" text-size" href="/../QuizSys/RoomAction">Phòng thi <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item active">
+                    <a class="text-size" href="#">Báo cáo <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item active text-size">
+                    <a class="text-size" href="#">Kết quả <span class="sr-only">(current)</span></a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav  col-md-1">
+                <li class="nav-item dropdown">
+                    <a class="dropdown-toggle"  id="navbarDropdown" role="button" data-toggle="dropdown" ><i class="fa fa-user" aria-hidden="true"></i></a>
+                    <div class="dropdown-menu" >
+                        <a class="dropdown-item" href="{% url 'teacher:info_page' %}"><i class="fa fa-info" aria-hidden="true"></i> Thông tin</a>
+                        <a class="dropdown-item" onclick="logoutButton()"><i class="fa fa-outdent" aria-hidden="true"></i> Đăng xuất </a>
+                        <div class="dropdown-divider"></div>
+                    </div>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav">
+                <div class="text-size" ><i class="fa fa-bell" aria-hidden="true"></i></div>
+            </ul>
+        </div>
+    </nav>
+</div>
+    <script>
+    function getCookie(name){
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== ''){
+            var cookies = document.cookie.split(';');
+            for (var i  = 0; i <  cookies.length; i++){
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length+1) === (name + '=')){
+                    cookieValue = decodeURIComponent(cookie.substring(name.length+1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    function authUser() {
+        var access_token = getCookie("Authorization");
+        if (access_token === null){
+            window.location.href = '{% url 'teacher:404_page' %}'
+        }
+        var info = null;
+        var url_api = '{% url  "teacher:info_user" %}';
+        return fetch(url_api, {
+            method: 'GET',
+            headers: {
+                "Authorization": "Bearer "+access_token,
+                "Content-type": "application/json",
+            }
+        }).then(response => response.json())
+            .then(data => {
+                if (data['success'] === '1'){
+                   return data['user'];
+                }else{
+                    location.href = '{% url 'teacher:404_page' %}';
+                }
+            }).catch(error => console.log(error));
+    }
+    var info_user = authUser();
+    info_user.then(data =>{
+        document.getElementById('username').innerHTML = data['user']['username']+ ' <i class="fa fa-wifi" aria-hidden="true"></i>'
+    });
+
+    function logoutButton(){
+        var confirm_logout = confirm('Do you want to logout?');
+        if (confirm_logout === true){
+            document.cookie = "Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            location.href = "{% url 'teacher:facebook' %}";
+        }
+    }
+    </script>
+{% endblock %}
