@@ -2,19 +2,18 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import login, logout
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import JsonResponse, HttpResponse, QueryDict
-from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
 from django.urls import reverse
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework import filters
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.generics import ListCreateAPIView, RetrieveDestroyAPIView, get_object_or_404
 from rest_framework.parsers import JSONParser
 from rest_framework import generics, permissions
-from rest_framework.authtoken import views
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from . import token_setting
@@ -58,6 +57,7 @@ def get_info_instructor(request):
     serializer = InstructorSerializer(instructor, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 # Register new user
 
 
@@ -72,7 +72,7 @@ def post_info_instructor(request):
         link = reverse('teacher:email-verify')
         absurl = 'http://' + current_site + link + '?token=' + str(token)
         data = {
-            'email_body': 'HI ' + user.user.username + ' .Use link below to verify your email \n' + absurl,
+            'email_body': 'Hi ' + user.user.username + ' .Use link below to verify your email \n' + absurl,
             'email_subject': 'Verify your email',
             'email_to': user.user.email
         }
@@ -126,7 +126,8 @@ def change_password(request):
 @api_view(['POST'])
 def send_email_reset_password(request):
     email = request.data['email']
-    user = User.objects.get(email=email)
+    # user = User.objects.get(email=email)
+    user = get_object_or_404(User, email=email)
     token = Token.objects.get(user_id=user.id).key
     current_site = get_current_site(request).domain
     link = reverse('teacher:forgot-password')
@@ -169,10 +170,35 @@ def change_password(request):
         if success:
             if request_data['new_password'] == request_data['new_password_confirm']:
                 request.user.set_password(request_data['new_password_confirm'])
+                request.user.save()
                 return JsonResponse(data_json_return(1, 'Your password have been change'), status=status.HTTP_200_OK)
-            return JsonResponse(data_json_return(0, 'Your password are not merge'),
-                                status=status.HTTP_406_NOT_ACCEPTABLE)
+            return JsonResponse(data_json_return(0, 'Your password are not merge'), status=status.HTTP_200_OK)
         return JsonResponse(data_json_return(0, 'Wrong password'), status=status.HTTP_200_OK)
+    return JsonResponse(data_json_return(0, 'Not allowed this method'), status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    model = User
+    permission_classes = (IsAuthenticated, )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.object = self.get_object()
+
+    def get_object(self):
+        obj = self.request.user
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            if not self.object.check_password(serializer.data.get("old_password")):
+                return Response(data_json_return(0, 'Wrong password'), status=status.HTTP_400_BAD_REQUEST)
+            self.object.set_password(serializer.data.get('new_password'))
+            self.object.save()
+            return Response(data_json_return(1, 'Success update'), status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -221,7 +247,7 @@ def create_show_room(request):
             return Response(context, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['PUT', 'GET', 'DELETE'])
+@api_view(['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def room_action(request, pk):
     try:
@@ -243,27 +269,24 @@ def room_action(request, pk):
         quiz.delete()
         room.delete()
         return JsonResponse({}, status=204)
-    if request.method == 'GET':
-        return JsonResponse({'room': RoomSerializer(room).data}, status=status.HTTP_200_OK)
 
-# filter
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def filter_room(request):
-    context = {}
-    query_key = request.GET
-    if "room_name" in query_key:
-        context['room_name'] = query_key['room_name']
-    elif "status" in query_key:
-        if query_key['status'] == 'online':
-            context['status'] = 1
-        else:
-            context['status'] = 0
-    if request.user:
-        room = Room.objects.filter(**context, instructor=Instructor.objects.get(user=request.user))
-        serializer = RoomSerializer(room, many=True)
-        return Response({"room": serializer.data}, status.HTTP_200_OK)
-    return Response({'messages': "Don't have user"}, status.HTTP_404_NOT_FOUND)
+
+class RoomListPaginator(PageNumberPagination):
+    page_size = 2
+    page_size_query_param = 'page'
+    max_page_size = 20
+
+
+# room_search
+class RoomListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    search_fields = ('room_name', 'status', 'instructor__user__username')
+    filterset_fields = ('room_name', 'status', 'instructor__user__username')
+    ordering_fields = ('room_name', 'id', 'create_at')
+    pagination_class = RoomListPaginator
 
 
 # create QUIZ
@@ -297,7 +320,8 @@ def render_question(request, pk=None):
         for i in list_question:
             QuestionQuizCopy1.objects.create(question_type=i.question_type, description=i.description,
                                              explain=i.explain,
-                                             image=i.image, choice=i.choice, correct_choice=i.correct_choice, quiz_copy_1=quiz_copy1)
+                                             image=i.image, choice=i.choice, correct_choice=i.correct_choice,
+                                             quiz_copy_1=quiz_copy1)
         serializer = QuizSerializer(quiz)
         return Response(data_json_return(1, "Success render", serializer.data), status.HTTP_200_OK)
 
@@ -314,6 +338,29 @@ def filter_quiz(request):
             return Response(data_json_return(1, "Don't have", serializer.data), status.HTTP_200_OK)
         return Response(data_json_return(1, "Success", serializer.data), status=status.HTTP_200_OK)
 
+
+class QuizListPaginator(PageNumberPagination):
+    page_size = 4
+    page_query_param = 'page'
+    max_page_size = 20
+
+
+class QuizListView(generics.ListAPIView):
+    permission_classes([IsAuthenticated])
+    queryset = Quiz.objects.all()
+    serializer_class = QuizSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    search_fields = ('quiz_title', 'subject', 'create_at', 'room__id', 'questionquiz__description')
+    filterset_fields = ('quiz_title', 'subject', 'create_at', 'room__id', 'questionquiz__description')
+    ordering_fields = ('quiz_title', 'id', 'create_at')
+    pagination_class = QuizListPaginator
+
+
+
+# @api_view(['POST', 'GET'])
+# @permission_classes(IsAuthenticated)
+# def launch_quiz(request):
+#     pass
 # =============================================================
 
 

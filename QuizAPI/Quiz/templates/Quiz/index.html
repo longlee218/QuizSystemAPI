@@ -40,13 +40,6 @@
     </div> <!-- row.// -->
     </div>
     <script>
-     function setCookie(cname, cvalue, exdays) {
-          var d = new Date();
-          d.setTime(d.getTime() + (exdays*1000));
-          var expires = "expires="+ d.toUTCString();
-          document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-     }
-
      var form_login = document.getElementById('login_form');
      form_login.addEventListener('submit', function (e) {
          e.preventDefault();

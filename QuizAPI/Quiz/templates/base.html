@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,31 +6,52 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-{#    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>#}
     <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.8/css/all.css">
+
+    <script>
+       function setCookie(cname, cvalue, exdays) {
+          var d = new Date();
+          d.setTime(d.getTime() + (exdays*1000));
+          var expires = "expires="+ d.toUTCString();
+          document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
+
+        function getCookieCS(name){
+                var cookieValue = null;
+                if (document.cookie && document.cookie !== ''){
+                    var cookies = document.cookie.split(';');
+                    for (var i  = 0; i <  cookies.length; i++){
+                        var cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length+1) === (name + '=')){
+                            cookieValue = decodeURIComponent(cookie.substring(name.length+1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        var csrftoken = getCookieCS('csrftoken');
+
+        function getCookie(name){
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== ''){
+            var cookies = document.cookie.split(';');
+            for (var i  = 0; i <  cookies.length; i++){
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length+1) === (name + '=')){
+                    cookieValue = decodeURIComponent(cookie.substring(name.length+1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    </script>
 </head>
 <body>
     {% block header %}{% endblock %}
     {% block navbar %}{% endblock %}
     {% block content %} {% endblock %}
     {% block footer %}{% endblock %}
-
-<script>
-    function getCookieCS(name){
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== ''){
-                var cookies = document.cookie.split(';');
-                for (var i  = 0; i <  cookies.length; i++){
-                    var cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length+1) === (name + '=')){
-                        cookieValue = decodeURIComponent(cookie.substring(name.length+1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-         var csrftoken = getCookieCS('csrftoken');
-</script>
 </body>
 </html>

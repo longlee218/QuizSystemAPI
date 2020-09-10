@@ -18,17 +18,20 @@ urlpatterns = [
     url(r'^api/login/$', login_user, name='login'),
     url(r'^api/room/action/(?P<pk>\d+)$', room_action, name='room_action_detail'),
     url(r'^api/room/$', create_show_room, name='create_show_room'),
-    url(r'^api/change/password/$', change_password, name='change_user'),
+    url(r'^api/change/password/$', change_password, name='change_password'),
     url(r'^api/update/user/$', update_info_instructor, name='change_user'),
     url(r'^api/quiz/action/(?P<pk>\d+)$', quiz_action, name='quiz_action'),
     url(r'^api/render/question/(?P<pk>\d+)$', render_question, name='render_question'),
-    url(r'^api/filter/room/$', filter_room, name='filter_room'),
-    url(r'^api/list/quiz$', filter_quiz, name='filter_quiz'),
+    # url(r'^api/filter/room/$', filter_room, name='filter_room'),
+    url(r'^api/list/quiz$', QuizListView.as_view(), name='quiz_list_view'),
+    url(r'^api/list/room$', RoomListView.as_view(), name='room_list_view'),
+
 
     url(r'^QuizSys/', views.login_page, name='login_page'),
     url(r'^home/$', views.homepage, name='homepage'),
     url(r'^forgot/password$', forgot_password, name='forgot-password'),
     url(r'^404_page$', views.page_404, name='404_page'),
     url(r'^info/$', views.info_page, name='info_page'),
-    url(r'^$', views.facebook, name='facebook')
+    url(r'^$', views.facebook, name='facebook'),
+    url(r'^reset/password/$', views.reset_password, name='reset_password')
 ]

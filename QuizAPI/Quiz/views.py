@@ -29,3 +29,8 @@ def info_page(request):
         'organization_type': organization_type_data
     }
     return render(request, 'Quiz/info_page.html', context)
+
+
+@permission_classes([IsAuthenticated])
+def reset_password(request):
+    return render(request, 'Quiz/reset_password.html', context={})

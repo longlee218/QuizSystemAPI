@@ -31,6 +31,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['password', 'password_new', 'username', 'email', 'last_name', 'first_name']
 
 
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    model = User
+
+    old_password = serializers.CharField(required=True)
+    password_confirm = serializers.CharField(required=True)
+
+
 class InstructorSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     country = serializers.CharField(required=False)
